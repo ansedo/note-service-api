@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
+	"log"
 	"log/slog"
-	"os"
 
 	desc "github.com/ansedo/note-service-api/pkg/note_v1"
 	"github.com/golang/protobuf/ptypes/empty"
@@ -20,13 +20,7 @@ type Client struct {
 func main() {
 	conn, err := grpc.Dial(address, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
-		slog.Error(
-			"failed to connect to grpc server",
-			slog.String("op", "cmd.client.main"),
-			slog.String("address", address),
-			slog.String("error", err.Error()),
-		)
-		os.Exit(1)
+		log.Fatalf("failed to connect to grpc server on `%s`: %s", address, err.Error())
 	}
 	defer conn.Close()
 
@@ -44,7 +38,7 @@ func main() {
 }
 
 func (c *Client) create(ctx context.Context) {
-	log := slog.With("op", "cmd.client.create")
+	logger := slog.With("op", "cmd.client.create")
 
 	req := &desc.CreateRequest{
 		Title:  "Title to create",
@@ -54,7 +48,7 @@ func (c *Client) create(ctx context.Context) {
 
 	resp, err := c.svc.Create(ctx, req)
 	if err != nil {
-		log.Error(
+		logger.Error(
 			"failed to create note",
 			slog.Any("request", req),
 			slog.String("error", err.Error()),
@@ -62,7 +56,7 @@ func (c *Client) create(ctx context.Context) {
 		return
 	}
 
-	log.Info(
+	logger.Info(
 		"grpc response from `Create` method has been received",
 		slog.String("method", "create"),
 		slog.Any("request", req),
@@ -71,7 +65,7 @@ func (c *Client) create(ctx context.Context) {
 }
 
 func (c *Client) get(ctx context.Context) {
-	log := slog.With("op", "cmd.client.get")
+	logger := slog.With("op", "cmd.client.get")
 
 	req := &desc.GetRequest{
 		Id: 1,
@@ -79,7 +73,7 @@ func (c *Client) get(ctx context.Context) {
 
 	resp, err := c.svc.Get(ctx, req)
 	if err != nil {
-		log.Error(
+		logger.Error(
 			"failed to get note",
 			slog.Any("request", req),
 			slog.String("error", err.Error()),
@@ -87,7 +81,7 @@ func (c *Client) get(ctx context.Context) {
 		return
 	}
 
-	log.Info(
+	logger.Info(
 		"grpc response from `Get` method has been received",
 		slog.String("method", "get"),
 		slog.Any("request", req),
@@ -96,13 +90,13 @@ func (c *Client) get(ctx context.Context) {
 }
 
 func (c *Client) getList(ctx context.Context) {
-	log := slog.With("op", "cmd.client.getList")
+	logger := slog.With("op", "cmd.client.getList")
 
 	req := &empty.Empty{}
 
 	resp, err := c.svc.GetList(ctx, req)
 	if err != nil {
-		log.Error(
+		logger.Error(
 			"failed to get list of notes",
 			slog.Any("request", req),
 			slog.String("error", err.Error()),
@@ -110,7 +104,7 @@ func (c *Client) getList(ctx context.Context) {
 		return
 	}
 
-	log.Info(
+	logger.Info(
 		"grpc response from `GetList` method has been received",
 		slog.String("method", "getList"),
 		slog.Any("request", req),
@@ -119,7 +113,7 @@ func (c *Client) getList(ctx context.Context) {
 }
 
 func (c *Client) update(ctx context.Context) {
-	log := slog.With("op", "cmd.client.update")
+	logger := slog.With("op", "cmd.client.update")
 
 	req := &desc.UpdateRequest{
 		Note: &desc.Note{
@@ -132,7 +126,7 @@ func (c *Client) update(ctx context.Context) {
 
 	resp, err := c.svc.Update(ctx, req)
 	if err != nil {
-		log.Error(
+		logger.Error(
 			"failed to update note",
 			slog.Any("request", req),
 			slog.String("error", err.Error()),
@@ -140,7 +134,7 @@ func (c *Client) update(ctx context.Context) {
 		return
 	}
 
-	log.Info(
+	logger.Info(
 		"grpc response from `Update` method has been received",
 		slog.String("method", "update"),
 		slog.Any("request", req),
@@ -149,7 +143,7 @@ func (c *Client) update(ctx context.Context) {
 }
 
 func (c *Client) delete(ctx context.Context) {
-	log := slog.With("op", "cmd.client.delete")
+	logger := slog.With("op", "cmd.client.delete")
 
 	req := &desc.DeleteRequest{
 		Id: 1,
@@ -157,7 +151,7 @@ func (c *Client) delete(ctx context.Context) {
 
 	resp, err := c.svc.Delete(ctx, req)
 	if err != nil {
-		log.Error(
+		logger.Error(
 			"failed to delete note",
 			slog.Any("request", req),
 			slog.String("error", err.Error()),
@@ -165,7 +159,7 @@ func (c *Client) delete(ctx context.Context) {
 		return
 	}
 
-	log.Info(
+	logger.Info(
 		"grpc response from `Delete` method has been received",
 		slog.String("method", "delete"),
 		slog.Any("request", req),

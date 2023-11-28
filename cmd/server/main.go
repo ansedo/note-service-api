@@ -1,9 +1,8 @@
 package main
 
 import (
-	"log/slog"
+	"log"
 	"net"
-	"os"
 
 	"github.com/ansedo/note-service-api/internal/app/api/note_v1"
 
@@ -14,32 +13,17 @@ import (
 const port = ":50051"
 
 func main() {
-	log := slog.With("op", "cmd.server.main")
-
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		log.Error(
-			"failed to mapping port",
-			slog.String("port", port),
-			slog.String("error", err.Error()),
-		)
-		os.Exit(1)
+		log.Fatalf("failed to mapping port `%s`: %s", port, err.Error())
 	}
 
 	s := grpc.NewServer()
 	desc.RegisterNoteServiceServer(s, note_v1.NewNote())
 
-	log.Info(
-		"grpc server has been started",
-		slog.String("port", port),
-	)
+	log.Printf("grpc server has been started on port `%s`", port)
 
 	if err = s.Serve(lis); err != nil {
-		log.Error(
-			"failed to serve grpc",
-			slog.Any("listener", lis),
-			slog.String("error", err.Error()),
-		)
-		os.Exit(1)
+		log.Fatalf("failed to serve grpc: %s", err.Error())
 	}
 }
