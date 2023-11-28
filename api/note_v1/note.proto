@@ -1,0 +1,52 @@
+syntax = "proto3";
+
+package api.note_v1;
+
+import "google/protobuf/empty.proto";
+
+option go_package = "github.com/ansedo/note-service-api/pkg/note_v1";
+
+service NoteService {
+  rpc Create (CreateRequest) returns (CreateResponse);
+  rpc Get (GetRequest) returns (GetResponse);
+  rpc GetList (google.protobuf.Empty) returns (GetListResponse);
+  rpc Update (UpdateRequest) returns (google.protobuf.Empty);
+  rpc Delete (DeleteRequest) returns (google.protobuf.Empty);
+}
+
+message Note {
+  int64 id = 1;
+  string title = 2;
+  string text = 3;
+  string author = 4;
+}
+
+message CreateRequest {
+  string title = 1;
+  string text = 2;
+  string author = 3;
+}
+
+message CreateResponse {
+  int64 id = 1;
+}
+
+message GetRequest {
+  int64 id = 1;
+}
+
+message GetResponse {
+  Note note = 1;
+}
+
+message GetListResponse {
+  repeated Note notes = 1;
+}
+
+message UpdateRequest {
+  Note note = 1;
+}
+
+message DeleteRequest {
+  int64 id = 1;
+}
