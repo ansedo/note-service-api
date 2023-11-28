@@ -44,9 +44,7 @@ func main() {
 }
 
 func (c *Client) create(ctx context.Context) {
-	const op = "cmd.client.create"
-
-	log := slog.With("op", op)
+	log := slog.With("op", "cmd.client.create")
 
 	req := &desc.CreateRequest{
 		Title:  "Title to create",
@@ -73,9 +71,7 @@ func (c *Client) create(ctx context.Context) {
 }
 
 func (c *Client) get(ctx context.Context) {
-	const op = "cmd.client.get"
-
-	log := slog.With("op", op)
+	log := slog.With("op", "cmd.client.get")
 
 	req := &desc.GetRequest{
 		Id: 1,
@@ -100,9 +96,7 @@ func (c *Client) get(ctx context.Context) {
 }
 
 func (c *Client) getList(ctx context.Context) {
-	const op = "cmd.client.getList"
-
-	log := slog.With("op", op)
+	log := slog.With("op", "cmd.client.getList")
 
 	req := &empty.Empty{}
 
@@ -125,9 +119,7 @@ func (c *Client) getList(ctx context.Context) {
 }
 
 func (c *Client) update(ctx context.Context) {
-	const op = "cmd.client.update"
-
-	log := slog.With("op", op)
+	log := slog.With("op", "cmd.client.update")
 
 	req := &desc.UpdateRequest{
 		Note: &desc.Note{
@@ -157,9 +149,7 @@ func (c *Client) update(ctx context.Context) {
 }
 
 func (c *Client) delete(ctx context.Context) {
-	const op = "cmd.client.delete"
-
-	log := slog.With("op", op)
+	log := slog.With("op", "cmd.client.delete")
 
 	req := &desc.DeleteRequest{
 		Id: 1,

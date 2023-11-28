@@ -14,9 +14,7 @@ import (
 const port = ":50051"
 
 func main() {
-	const op = "cmd.server.main"
-
-	log := slog.With("op", op)
+	log := slog.With("op", "cmd.server.main")
 
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
