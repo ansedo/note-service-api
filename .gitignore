@@ -18,7 +18,10 @@ LICENSE
 !go.mod
 
 !Makefile
+!docker-compose.yaml
 !*.proto
+
+!migrations/*
 
 # ...even if they are in subdirectories
 !*/
