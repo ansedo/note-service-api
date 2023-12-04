@@ -1,12 +1,12 @@
 -- +goose Up
 CREATE TABLE note
 (
-    id         bigserial primary key,
-    title      text,
-    text       text,
-    author     text,
-    created_at timestamp not null default now(),
-    updated_at timestamp
+    id         BIGSERIAL PRIMARY KEY,
+    title      TEXT,
+    text       TEXT,
+    author     TEXT,
+    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMP
 );
 
 -- +goose Down
