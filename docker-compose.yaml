@@ -1,0 +1,17 @@
+version: '3.8'
+
+volumes:
+  postgres_volume:
+
+services:
+  db:
+    container_name: note_db_repository
+    image: postgres:14-alpine3.15
+    environment:
+      - "POSTGRES_DB=note-service"
+      - "POSTGRES_USER=note-service-user"
+      - "POSTGRES_PASSWORD=note-service-password"
+    ports:
+      - "54321:5432"
+    volumes:
+      - postgres_volume:/var/lib/postgresql/data

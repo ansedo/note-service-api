@@ -4,8 +4,12 @@ import (
 	"context"
 	"log/slog"
 
-	desc "github.com/ansedo/note-service-api/pkg/note_v1"
+	sq "github.com/Masterminds/squirrel"
 	"github.com/golang/protobuf/ptypes/empty"
+	_ "github.com/jackc/pgx/stdlib"
+	"github.com/jmoiron/sqlx"
+
+	desc "github.com/ansedo/note-service-api/pkg/note_v1"
 )
 
 func (n *Note) GetList(ctx context.Context, req *empty.Empty) (*desc.GetListResponse, error) {
@@ -15,26 +19,45 @@ func (n *Note) GetList(ctx context.Context, req *empty.Empty) (*desc.GetListResp
 		slog.Any("request", req),
 	)
 
-	return &desc.GetListResponse{
-		Notes: []*desc.Note{
-			{
-				Id:     1,
-				Title:  "Title #1 you got",
-				Text:   "Text #1 you got",
-				Author: "Author #1 you got",
+	db, err := sqlx.Open("pgx", dbDsn)
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	query, args, err := sq.Select(sqlColumnId, sqlColumnTitle, sqlColumnText, sqlColumnAuthor).
+		PlaceholderFormat(sq.Dollar).
+		From(noteTable).
+		ToSql()
+	if err != nil {
+		return nil, err
+	}
+
+	row, err := db.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer row.Close()
+
+	var (
+		id                  int64
+		title, text, author string
+	)
+	var notes []*desc.Note
+	for row.Next() {
+		if err = row.Scan(&id, &title, &text, &author); err != nil {
+			return nil, err
+		}
+		notes = append(
+			notes,
+			&desc.Note{
+				Id:     id,
+				Title:  title,
+				Text:   text,
+				Author: author,
 			},
-			{
-				Id:     2,
-				Title:  "Title #2 you got",
-				Text:   "Text #2 you got",
-				Author: "Author #2 you got",
-			},
-			{
-				Id:     3,
-				Title:  "Title #3 you got",
-				Text:   "Text #3 you got",
-				Author: "Author #3 you got",
-			},
-		},
-	}, nil
+		)
+	}
+
+	return &desc.GetListResponse{Notes: notes}, nil
 }
