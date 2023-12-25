@@ -23,6 +23,8 @@ LICENSE
 
 !migrations/*
 
+!api.swagger.json
+
 # ...even if they are in subdirectories
 !*/
 
