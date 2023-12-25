@@ -2,12 +2,18 @@ syntax = "proto3";
 
 package api.note_v1;
 
+import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
 
 option go_package = "github.com/ansedo/note-service-api/pkg/note_v1";
 
 service NoteService {
-  rpc Create (CreateRequest) returns (CreateResponse);
+  rpc Create (CreateRequest) returns (CreateResponse) {
+    option (google.api.http) = {
+      post: "/note/v1"
+      body: "*"
+    };
+  }
   rpc Get (GetRequest) returns (GetResponse);
   rpc GetList (google.protobuf.Empty) returns (GetListResponse);
   rpc Update (UpdateRequest) returns (google.protobuf.Empty);

@@ -26,5 +26,5 @@ LICENSE
 # ...even if they are in subdirectories
 !*/
 
-# ...except vendor
-*vendor/
+# ...except vendors
+*vendor*/
