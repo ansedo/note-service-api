@@ -7,6 +7,7 @@ generate:
 			--grpc-gateway_out=pkg/note_v1 \
 			--grpc-gateway_opt=logtostderr=true \
 			--grpc-gateway_opt=paths=import \
+			--validate_out lang=go:pkg/note_v1 \
 			--swagger_out=allow_merge=true,merge_file_name=api:pkg/note_v1 \
 			api/note_v1/note.proto
 	mv pkg/note_v1/github.com/ansedo/note-service-api/pkg/note_v1/* pkg/note_v1/

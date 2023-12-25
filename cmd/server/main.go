@@ -8,7 +8,7 @@ import (
 	"sync"
 
 	"github.com/ansedo/note-service-api/internal/app/api/note_v1"
-	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc/credentials/insecure"
 
 	desc "github.com/ansedo/note-service-api/pkg/note_v1"
@@ -64,6 +64,8 @@ func startHttp() error {
 	if err != nil {
 		return err
 	}
+
+	log.Printf("http server has been started on `%s`", hostHttp)
 
 	return http.ListenAndServe(hostHttp, mux)
 }
