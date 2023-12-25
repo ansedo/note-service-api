@@ -7,12 +7,13 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/ansedo/note-service-api/internal/app/api/note_v1"
+	grpcValidator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/ansedo/note-service-api/internal/app/api/note_v1"
 	desc "github.com/ansedo/note-service-api/pkg/note_v1"
-	"google.golang.org/grpc"
 )
 
 const (
@@ -42,7 +43,9 @@ func startGRPC() error {
 		log.Fatalf("failed to mapping hostGrpc `%s`: %s", hostGrpc, err.Error())
 	}
 
-	s := grpc.NewServer()
+	s := grpc.NewServer(
+		grpc.UnaryInterceptor(grpcValidator.UnaryServerInterceptor()),
+	)
 	desc.RegisterNoteServiceServer(s, note_v1.NewNote())
 
 	log.Printf("grpc server has been started on `%s`", hostGrpc)
