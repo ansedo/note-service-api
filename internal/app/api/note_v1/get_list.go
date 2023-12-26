@@ -2,7 +2,6 @@ package note_v1
 
 import (
 	"context"
-	"log/slog"
 
 	"github.com/golang/protobuf/ptypes/empty"
 
@@ -10,11 +9,6 @@ import (
 )
 
 func (n *Note) GetList(ctx context.Context, req *empty.Empty) (*desc.GetListResponse, error) {
-	slog.Info(
-		"method `GetList` has been called",
-		slog.String("op", "app.api.note_v1.Notes"),
-	)
-
 	notes, err := n.noteService.Notes(ctx)
 	if err != nil {
 		return nil, err
