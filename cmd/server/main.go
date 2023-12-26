@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
 	"net/http"
@@ -9,16 +10,32 @@ import (
 
 	grpcValidator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	_ "github.com/jackc/pgx/stdlib"
+	"github.com/jmoiron/sqlx"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
 	"github.com/ansedo/note-service-api/internal/app/api/note_v1"
+	"github.com/ansedo/note-service-api/internal/repository"
+	"github.com/ansedo/note-service-api/internal/service/note"
 	desc "github.com/ansedo/note-service-api/pkg/note_v1"
 )
 
 const (
 	hostGrpc = "localhost:50051"
 	hostHttp = "localhost:8090"
+
+	host       = "localhost"
+	port       = "54321"
+	dbUser     = "note-service-user"
+	dbPassword = "note-service-password"
+	dbName     = "note-service"
+	sslMode    = "disable"
+)
+
+var dbDsn = fmt.Sprintf(
+	"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
+	host, port, dbUser, dbPassword, dbName, sslMode,
 )
 
 func main() {
@@ -43,14 +60,24 @@ func startGRPC() error {
 		log.Fatalf("failed to mapping hostGrpc `%s`: %s", hostGrpc, err.Error())
 	}
 
-	s := grpc.NewServer(
+	db, err := sqlx.Open("pgx", dbDsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	noteService := note.NewService(
+		repository.NewNoteRepository(db),
+	)
+
+	srv := grpc.NewServer(
 		grpc.UnaryInterceptor(grpcValidator.UnaryServerInterceptor()),
 	)
-	desc.RegisterNoteServiceServer(s, note_v1.NewNote())
+	desc.RegisterNoteServiceServer(srv, note_v1.NewNote(noteService))
 
 	log.Printf("grpc server has been started on `%s`", hostGrpc)
 
-	if err = s.Serve(lis); err != nil {
+	if err = srv.Serve(lis); err != nil {
 		log.Fatalf("failed to serve grpc: %s", err.Error())
 	}
 

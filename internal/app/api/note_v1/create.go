@@ -4,15 +4,8 @@ import (
 	"context"
 	"log/slog"
 
-	sq "github.com/Masterminds/squirrel"
-	_ "github.com/jackc/pgx/stdlib"
-	"github.com/jmoiron/sqlx"
-
+	"github.com/ansedo/note-service-api/internal/model"
 	desc "github.com/ansedo/note-service-api/pkg/note_v1"
-)
-
-const (
-	sqlInsertSuffix = "RETURNING ID"
 )
 
 func (n *Note) Create(ctx context.Context, req *desc.CreateRequest) (*desc.CreateResponse, error) {
@@ -22,36 +15,18 @@ func (n *Note) Create(ctx context.Context, req *desc.CreateRequest) (*desc.Creat
 		slog.Any("request", req),
 	)
 
-	db, err := sqlx.Open("pgx", dbDsn)
-	if err != nil {
-		return nil, err
-	}
-	defer db.Close()
-
-	query, args, err := sq.Insert(noteTable).
-		PlaceholderFormat(sq.Dollar).
-		Columns(sqlColumnTitle, sqlColumnText, sqlColumnAuthor).
-		Values(req.GetTitle(), req.GetText(), req.GetAuthor()).
-		Suffix(sqlInsertSuffix).
-		ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	row, err := db.QueryContext(ctx, query, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer row.Close()
-
-	var id int64
-	row.Next()
-	err = row.Scan(&id)
+	note, err := n.noteService.Create(
+		ctx,
+		&model.Note{
+			Title:  req.GetTitle(),
+			Text:   req.GetText(),
+			Author: req.GetAuthor(),
+			Email:  req.GetEmail(),
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &desc.CreateResponse{
-		Id: id,
-	}, nil
+	return &desc.CreateResponse{Id: note.Id}, nil
 }
