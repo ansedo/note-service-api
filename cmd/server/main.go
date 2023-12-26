@@ -44,11 +44,16 @@ func main() {
 
 	go func() {
 		defer wg.Done()
-		startGRPC()
+		if err := startGRPC(); err != nil {
+			log.Fatalf("failed to start grpc server: %s", err.Error())
+		}
 	}()
+
 	go func() {
 		defer wg.Done()
-		startHttp()
+		if err := startHttp(); err != nil {
+			log.Fatalf("failed to start http server: %s", err.Error())
+		}
 	}()
 
 	wg.Wait()
@@ -57,7 +62,7 @@ func main() {
 func startGRPC() error {
 	lis, err := net.Listen("tcp", hostGrpc)
 	if err != nil {
-		log.Fatalf("failed to mapping hostGrpc `%s`: %s", hostGrpc, err.Error())
+		return err
 	}
 
 	db, err := sqlx.Open("pgx", dbDsn)
@@ -78,7 +83,7 @@ func startGRPC() error {
 	log.Printf("grpc server has been started on `%s`", hostGrpc)
 
 	if err = srv.Serve(lis); err != nil {
-		log.Fatalf("failed to serve grpc: %s", err.Error())
+		return err
 	}
 
 	return nil
