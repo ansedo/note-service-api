@@ -9,7 +9,7 @@ import (
 )
 
 func (n *Note) GetList(ctx context.Context, req *empty.Empty) (*desc.GetListResponse, error) {
-	notes, err := n.noteService.Notes(ctx)
+	notes, err := n.noteService.GetList(ctx)
 	if err != nil {
 		return nil, err
 	}

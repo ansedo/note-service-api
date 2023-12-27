@@ -47,7 +47,7 @@ func (r *Repository) Create(ctx context.Context, note *model.Note) (*model.Note,
 	return &model.Note{Id: id}, nil
 }
 
-func (r *Repository) Note(ctx context.Context, note *model.Note) (*model.Note, error) {
+func (r *Repository) Get(ctx context.Context, note *model.Note) (*model.Note, error) {
 	query, args, err := sq.Select(table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
 		PlaceholderFormat(sq.Dollar).
 		From(table.Note).
@@ -78,7 +78,7 @@ func (r *Repository) Note(ctx context.Context, note *model.Note) (*model.Note, e
 	}, nil
 }
 
-func (r *Repository) Notes(ctx context.Context) ([]*model.Note, error) {
+func (r *Repository) GetList(ctx context.Context) ([]*model.Note, error) {
 	query, args, err := sq.Select(table.ColumnId, table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
 		PlaceholderFormat(sq.Dollar).
 		From(table.Note).

@@ -8,7 +8,7 @@ import (
 )
 
 func (n *Note) Get(ctx context.Context, req *desc.GetRequest) (*desc.GetResponse, error) {
-	note, err := n.noteService.Note(ctx, &model.Note{Id: req.GetId()})
+	note, err := n.noteService.Get(ctx, &model.Note{Id: req.GetId()})
 	if err != nil {
 		return nil, err
 	}
