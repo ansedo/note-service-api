@@ -2,37 +2,67 @@ syntax = "proto3";
 
 package api.note_v1;
 
+import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "validate/validate.proto";
 
 option go_package = "github.com/ansedo/note-service-api/pkg/note_v1";
 
 service NoteService {
-  rpc Create (CreateRequest) returns (CreateResponse);
-  rpc Get (GetRequest) returns (GetResponse);
-  rpc GetList (google.protobuf.Empty) returns (GetListResponse);
-  rpc Update (UpdateRequest) returns (google.protobuf.Empty);
-  rpc Delete (DeleteRequest) returns (google.protobuf.Empty);
+  rpc Create (CreateRequest) returns (CreateResponse) {
+    option (google.api.http) = {
+      post: "/v1/notes"
+      body: "*"
+    };
+  }
+
+  rpc Get (GetRequest) returns (GetResponse) {
+    option (google.api.http) = {
+      get: "/v1/notes/{id}"
+    };
+  }
+
+  rpc GetList (google.protobuf.Empty) returns (GetListResponse) {
+    option (google.api.http) = {
+      get: "/v1/notes"
+    };
+  }
+
+  rpc Update (UpdateRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      patch: "/v1/notes/{note.id}"
+      body: "*"
+    };
+  }
+
+  rpc Delete (DeleteRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/notes/{id}"
+    };
+  }
 }
 
 message Note {
-  int64 id = 1;
-  string title = 2;
-  string text = 3;
-  string author = 4;
+  int64 id = 1 [(validate.rules).int64.gt = 0];
+  string title = 2 [(validate.rules).string = {ignore_empty: true, max_len: 100}];
+  string text = 3 [(validate.rules).string = {ignore_empty: true, max_bytes: 4096}];
+  string author = 4 [(validate.rules).string = {ignore_empty: true, max_len: 100}];
+  string email = 5 [(validate.rules).string = {ignore_empty: true, email: true}];
 }
 
 message CreateRequest {
-  string title = 1;
-  string text = 2;
-  string author = 3;
+  string title = 1 [(validate.rules).string = {min_len: 10, max_len: 100}];
+  string text = 2 [(validate.rules).string = {min_len: 10, max_len: 4096}];
+  string author = 3 [(validate.rules).string = {min_len: 10, max_len: 100}];
+  string email = 4 [(validate.rules).string.email = true];
 }
 
 message CreateResponse {
-  int64 id = 1;
+  int64 id = 1 [(validate.rules).int64.gt = 0];
 }
 
 message GetRequest {
-  int64 id = 1;
+  int64 id = 1 [(validate.rules).int64.gt = 0];
 }
 
 message GetResponse {
@@ -48,5 +78,5 @@ message UpdateRequest {
 }
 
 message DeleteRequest {
-  int64 id = 1;
+  int64 id = 1 [(validate.rules).int64.gt = 0];
 }
