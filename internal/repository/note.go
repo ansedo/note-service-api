@@ -10,19 +10,11 @@ import (
 	"github.com/ansedo/note-service-api/internal/repository/table"
 )
 
-type NoteRepository interface {
-	Create(ctx context.Context, note *model.Note) (*model.Note, error)
-	Note(ctx context.Context, req *model.Note) (*model.Note, error)
-	Notes(ctx context.Context) ([]*model.Note, error)
-	Update(ctx context.Context, note *model.Note) error
-	Delete(ctx context.Context, note *model.Note) error
-}
-
 type Repository struct {
 	db *sqlx.DB
 }
 
-func NewNoteRepository(db *sqlx.DB) NoteRepository {
+func NewNoteRepository(db *sqlx.DB) *Repository {
 	return &Repository{
 		db: db,
 	}
@@ -54,6 +46,7 @@ func (r *Repository) Create(ctx context.Context, note *model.Note) (*model.Note,
 
 	return &model.Note{Id: id}, nil
 }
+
 func (r *Repository) Note(ctx context.Context, note *model.Note) (*model.Note, error) {
 	query, args, err := sq.Select(table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
 		PlaceholderFormat(sq.Dollar).
