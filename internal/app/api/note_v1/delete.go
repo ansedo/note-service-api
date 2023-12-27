@@ -10,5 +10,9 @@ import (
 )
 
 func (n *Note) Delete(ctx context.Context, req *desc.DeleteRequest) (*empty.Empty, error) {
-	return &empty.Empty{}, n.noteService.Delete(ctx, &model.Note{Id: req.GetId()})
+	if err := n.noteService.Delete(ctx, &model.Note{Id: req.GetId()}); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
 }

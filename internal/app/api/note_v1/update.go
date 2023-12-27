@@ -10,5 +10,9 @@ import (
 )
 
 func (n *Note) Update(ctx context.Context, req *desc.UpdateRequest) (*empty.Empty, error) {
-	return &empty.Empty{}, n.noteService.Update(ctx, model.NewNoteFromDesc(req.GetNote()))
+	if err := n.noteService.Update(ctx, model.NewNoteFromDesc(req.GetNote())); err != nil {
+		return nil, err
+	}
+
+	return &empty.Empty{}, nil
 }
