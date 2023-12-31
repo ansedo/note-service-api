@@ -4,6 +4,8 @@ package api.note_v1;
 
 import "google/api/annotations.proto";
 import "google/protobuf/empty.proto";
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/wrappers.proto";
 import "validate/validate.proto";
 
 option go_package = "github.com/ansedo/note-service-api/pkg/note_v1";
@@ -30,7 +32,7 @@ service NoteService {
 
   rpc Update (UpdateRequest) returns (google.protobuf.Empty) {
     option (google.api.http) = {
-      patch: "/v1/notes/{note.id}"
+      patch: "/v1/notes/{id}"
       body: "*"
     };
   }
@@ -42,19 +44,30 @@ service NoteService {
   }
 }
 
+message NoteInfo {
+  string title = 1 [(validate.rules).string.max_len = 100];
+  string text = 2 [(validate.rules).string.max_bytes = 4096];
+  string author = 3 [(validate.rules).string.max_len = 100];
+  string email = 4 [(validate.rules).string.email = true];
+}
+
+message UpdateNoteInfo {
+  google.protobuf.StringValue title = 1;
+  google.protobuf.StringValue text = 2;
+  google.protobuf.StringValue author = 3;
+  google.protobuf.StringValue email = 4;
+}
+
 message Note {
-  int64 id = 1 [(validate.rules).int64.gt = 0];
-  string title = 2 [(validate.rules).string = {ignore_empty: true, max_len: 100}];
-  string text = 3 [(validate.rules).string = {ignore_empty: true, max_bytes: 4096}];
-  string author = 4 [(validate.rules).string = {ignore_empty: true, max_len: 100}];
-  string email = 5 [(validate.rules).string = {ignore_empty: true, email: true}];
+  int64 id = 1;
+  NoteInfo note = 2;
+  google.protobuf.Timestamp created_at = 3;
+  google.protobuf.Timestamp updated_at = 4;
 }
 
 message CreateRequest {
-  string title = 1 [(validate.rules).string = {min_len: 10, max_len: 100}];
-  string text = 2 [(validate.rules).string = {min_len: 10, max_len: 4096}];
-  string author = 3 [(validate.rules).string = {min_len: 10, max_len: 100}];
-  string email = 4 [(validate.rules).string.email = true];
+  int64 id = 1 [(validate.rules).int64.gt = 0];
+  NoteInfo note = 2;
 }
 
 message CreateResponse {
@@ -74,7 +87,8 @@ message GetListResponse {
 }
 
 message UpdateRequest {
-  Note note = 1;
+  int64 id = 1 [(validate.rules).int64.gt = 0];
+  UpdateNoteInfo note = 2;
 }
 
 message DeleteRequest {

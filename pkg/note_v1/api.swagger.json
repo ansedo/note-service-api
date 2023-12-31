@@ -121,9 +121,7 @@
         "tags": [
           "NoteService"
         ]
-      }
-    },
-    "/v1/notes/{note.id}": {
+      },
       "patch": {
         "operationId": "NoteService_Update",
         "responses": {
@@ -142,7 +140,7 @@
         },
         "parameters": [
           {
-            "name": "note.id",
+            "name": "id",
             "in": "path",
             "required": true,
             "type": "string",
@@ -167,17 +165,12 @@
     "note_v1CreateRequest": {
       "type": "object",
       "properties": {
-        "title": {
-          "type": "string"
+        "id": {
+          "type": "string",
+          "format": "int64"
         },
-        "text": {
-          "type": "string"
-        },
-        "author": {
-          "type": "string"
-        },
-        "email": {
-          "type": "string"
+        "note": {
+          "$ref": "#/definitions/note_v1NoteInfo"
         }
       }
     },
@@ -216,6 +209,39 @@
           "type": "string",
           "format": "int64"
         },
+        "note": {
+          "$ref": "#/definitions/note_v1NoteInfo"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time"
+        }
+      }
+    },
+    "note_v1NoteInfo": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "text": {
+          "type": "string"
+        },
+        "author": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        }
+      }
+    },
+    "note_v1UpdateNoteInfo": {
+      "type": "object",
+      "properties": {
         "title": {
           "type": "string"
         },
@@ -233,8 +259,12 @@
     "note_v1UpdateRequest": {
       "type": "object",
       "properties": {
+        "id": {
+          "type": "string",
+          "format": "int64"
+        },
         "note": {
-          "$ref": "#/definitions/note_v1Note"
+          "$ref": "#/definitions/note_v1UpdateNoteInfo"
         }
       }
     },
