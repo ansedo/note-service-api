@@ -4,23 +4,22 @@ import (
 	"context"
 
 	sq "github.com/Masterminds/squirrel"
-	"github.com/jmoiron/sqlx"
-
 	"github.com/ansedo/note-service-api/internal/model"
+	"github.com/ansedo/note-service-api/internal/pkg/db"
 	"github.com/ansedo/note-service-api/internal/repository/table"
 )
 
-type Repository struct {
-	db *sqlx.DB
+type NoteRepository struct {
+	client db.Client
 }
 
-func NewNoteRepository(db *sqlx.DB) *Repository {
-	return &Repository{
-		db: db,
+func NewNoteRepository(client db.Client) *NoteRepository {
+	return &NoteRepository{
+		client: client,
 	}
 }
 
-func (r *Repository) Create(ctx context.Context, note *model.Note) (*model.Note, error) {
+func (r *NoteRepository) Create(ctx context.Context, note *model.Note) (*model.Note, error) {
 	query, args, err := sq.Insert(table.Note).
 		PlaceholderFormat(sq.Dollar).
 		Columns(table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
@@ -31,7 +30,12 @@ func (r *Repository) Create(ctx context.Context, note *model.Note) (*model.Note,
 		return nil, err
 	}
 
-	row, err := r.db.QueryContext(ctx, query, args...)
+	q := db.Query{
+		Name:     "CreateNote",
+		QueryRaw: query,
+	}
+
+	row, err := r.client.DB().Query(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +51,7 @@ func (r *Repository) Create(ctx context.Context, note *model.Note) (*model.Note,
 	return &model.Note{Id: id}, nil
 }
 
-func (r *Repository) Get(ctx context.Context, note *model.Note) (*model.Note, error) {
+func (r *NoteRepository) Get(ctx context.Context, note *model.Note) (*model.Note, error) {
 	query, args, err := sq.Select(table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
 		PlaceholderFormat(sq.Dollar).
 		From(table.Note).
@@ -57,7 +61,12 @@ func (r *Repository) Get(ctx context.Context, note *model.Note) (*model.Note, er
 		return nil, err
 	}
 
-	row, err := r.db.QueryContext(ctx, query, args...)
+	q := db.Query{
+		Name:     "GetNote",
+		QueryRaw: query,
+	}
+
+	row, err := r.client.DB().Query(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +87,7 @@ func (r *Repository) Get(ctx context.Context, note *model.Note) (*model.Note, er
 	}, nil
 }
 
-func (r *Repository) GetList(ctx context.Context) ([]*model.Note, error) {
+func (r *NoteRepository) GetList(ctx context.Context) ([]*model.Note, error) {
 	query, args, err := sq.Select(table.ColumnId, table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
 		PlaceholderFormat(sq.Dollar).
 		From(table.Note).
@@ -87,7 +96,12 @@ func (r *Repository) GetList(ctx context.Context) ([]*model.Note, error) {
 		return nil, err
 	}
 
-	row, err := r.db.QueryContext(ctx, query, args...)
+	q := db.Query{
+		Name:     "GetList",
+		QueryRaw: query,
+	}
+
+	row, err := r.client.DB().Query(ctx, q, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -117,7 +131,7 @@ func (r *Repository) GetList(ctx context.Context) ([]*model.Note, error) {
 	return notes, nil
 }
 
-func (r *Repository) Update(ctx context.Context, note *model.Note) error {
+func (r *NoteRepository) Update(ctx context.Context, note *model.Note) error {
 	clauses := make(map[string]interface{})
 	clauses[table.ColumnUpdatedAt] = sq.Expr("NOW()")
 
@@ -143,14 +157,19 @@ func (r *Repository) Update(ctx context.Context, note *model.Note) error {
 		return err
 	}
 
-	if _, err = r.db.ExecContext(ctx, query, args...); err != nil {
+	q := db.Query{
+		Name:     "UpdateNote",
+		QueryRaw: query,
+	}
+
+	if _, err = r.client.DB().Exec(ctx, q, args...); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *Repository) Delete(ctx context.Context, note *model.Note) error {
+func (r *NoteRepository) Delete(ctx context.Context, note *model.Note) error {
 	query, args, err := sq.Delete(table.Note).
 		PlaceholderFormat(sq.Dollar).
 		Where(sq.Eq{table.ColumnId: note.Id}).
@@ -159,7 +178,12 @@ func (r *Repository) Delete(ctx context.Context, note *model.Note) error {
 		return err
 	}
 
-	if _, err = r.db.ExecContext(ctx, query, args...); err != nil {
+	q := db.Query{
+		Name:     "DeleteNote",
+		QueryRaw: query,
+	}
+
+	if _, err = r.client.DB().Exec(ctx, q, args...); err != nil {
 		return err
 	}
 
