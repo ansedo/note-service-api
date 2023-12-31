@@ -60,7 +60,7 @@ message UpdateNoteInfo {
 
 message Note {
   int64 id = 1;
-  NoteInfo note = 2;
+  NoteInfo info = 2;
   google.protobuf.Timestamp created_at = 3;
   google.protobuf.Timestamp updated_at = 4;
 }

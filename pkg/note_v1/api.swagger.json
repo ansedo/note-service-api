@@ -209,7 +209,7 @@
           "type": "string",
           "format": "int64"
         },
-        "note": {
+        "info": {
           "$ref": "#/definitions/note_v1NoteInfo"
         },
         "created_at": {
