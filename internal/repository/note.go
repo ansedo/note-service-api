@@ -19,15 +19,15 @@ func NewNoteRepository(client db.Client) *NoteRepository {
 	}
 }
 
-func (r *NoteRepository) Create(ctx context.Context, note *model.Note) (*model.Note, error) {
+func (r *NoteRepository) Create(ctx context.Context, noteInfo *model.NoteInfo) (int64, error) {
 	query, args, err := sq.Insert(table.Note).
 		PlaceholderFormat(sq.Dollar).
 		Columns(table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
-		Values(note.Title, note.Text, note.Author, note.Email).
+		Values(noteInfo.Title, noteInfo.Text, noteInfo.Author, noteInfo.Email).
 		Suffix(table.InsertSuffix).
 		ToSql()
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	q := db.Query{
@@ -35,9 +35,9 @@ func (r *NoteRepository) Create(ctx context.Context, note *model.Note) (*model.N
 		QueryRaw: query,
 	}
 
-	row, err := r.client.DB().Query(ctx, q, args...)
+	row, err := r.client.DB().Query(ctx, q, args)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	defer row.Close()
 
@@ -45,17 +45,17 @@ func (r *NoteRepository) Create(ctx context.Context, note *model.Note) (*model.N
 	row.Next()
 	err = row.Scan(&id)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	return &model.Note{Id: id}, nil
+	return id, nil
 }
 
-func (r *NoteRepository) Get(ctx context.Context, note *model.Note) (*model.Note, error) {
+func (r *NoteRepository) Get(ctx context.Context, id int64) (*model.Note, error) {
 	query, args, err := sq.Select(table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
 		PlaceholderFormat(sq.Dollar).
 		From(table.Note).
-		Where(sq.Eq{table.ColumnId: note.Id}).
+		Where(sq.Eq{table.ColumnId: id}).
 		ToSql()
 	if err != nil {
 		return nil, err
@@ -66,25 +66,12 @@ func (r *NoteRepository) Get(ctx context.Context, note *model.Note) (*model.Note
 		QueryRaw: query,
 	}
 
-	row, err := r.client.DB().Query(ctx, q, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer row.Close()
-
-	var title, text, author, email string
-	row.Next()
-	if err = row.Scan(&title, &text, &author, &email); err != nil {
+	var note model.Note
+	if err = r.client.DB().Get(ctx, &note, q, args); err != nil {
 		return nil, err
 	}
 
-	return &model.Note{
-		Id:     note.Id,
-		Title:  title,
-		Text:   text,
-		Author: author,
-		Email:  email,
-	}, nil
+	return &note, nil
 }
 
 func (r *NoteRepository) GetList(ctx context.Context) ([]*model.Note, error) {
@@ -101,58 +88,34 @@ func (r *NoteRepository) GetList(ctx context.Context) ([]*model.Note, error) {
 		QueryRaw: query,
 	}
 
-	row, err := r.client.DB().Query(ctx, q, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer row.Close()
-
-	var (
-		id                         int64
-		title, text, author, email string
-	)
 	var notes []*model.Note
-	for row.Next() {
-		if err = row.Scan(&id, &title, &text, &author, &email); err != nil {
-			return nil, err
-		}
-		notes = append(
-			notes,
-			&model.Note{
-				Id:     id,
-				Title:  title,
-				Text:   text,
-				Author: author,
-				Email:  email,
-			},
-		)
+	if err = r.client.DB().Select(ctx, notes, q, args); err != nil {
+		return nil, err
 	}
 
 	return notes, nil
 }
 
-func (r *NoteRepository) Update(ctx context.Context, note *model.Note) error {
-	clauses := make(map[string]interface{})
-	clauses[table.ColumnUpdatedAt] = sq.Expr("NOW()")
-
-	if note.Title != "" {
-		clauses[table.ColumnTitle] = note.Title
-	}
-	if note.Text != "" {
-		clauses[table.ColumnText] = note.Text
-	}
-	if note.Author != "" {
-		clauses[table.ColumnAuthor] = note.Author
-	}
-	if note.Email != "" {
-		clauses[table.ColumnEmail] = note.Email
-	}
-
-	query, args, err := sq.Update(table.Note).
+func (r *NoteRepository) Update(ctx context.Context, id int64, updateNoteInfo *model.UpdateNoteInfo) error {
+	builder := sq.Update(table.Note).
+		Set(table.ColumnUpdatedAt, sq.Expr("NOW()")).
 		PlaceholderFormat(sq.Dollar).
-		SetMap(clauses).
-		Where(sq.Eq{table.ColumnId: note.Id}).
-		ToSql()
+		Where(sq.Eq{table.ColumnId: id})
+
+	if updateNoteInfo.Title.Valid {
+		builder = builder.Set(table.ColumnTitle, updateNoteInfo.Title.String)
+	}
+	if updateNoteInfo.Text.Valid {
+		builder = builder.Set(table.ColumnText, updateNoteInfo.Text.String)
+	}
+	if updateNoteInfo.Author.Valid {
+		builder = builder.Set(table.ColumnAuthor, updateNoteInfo.Author.String)
+	}
+	if updateNoteInfo.Email.Valid {
+		builder = builder.Set(table.ColumnEmail, updateNoteInfo.Email.String)
+	}
+
+	query, args, err := builder.ToSql()
 	if err != nil {
 		return err
 	}
@@ -162,17 +125,17 @@ func (r *NoteRepository) Update(ctx context.Context, note *model.Note) error {
 		QueryRaw: query,
 	}
 
-	if _, err = r.client.DB().Exec(ctx, q, args...); err != nil {
+	if _, err = r.client.DB().Exec(ctx, q, args); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (r *NoteRepository) Delete(ctx context.Context, note *model.Note) error {
+func (r *NoteRepository) Delete(ctx context.Context, id int64) error {
 	query, args, err := sq.Delete(table.Note).
 		PlaceholderFormat(sq.Dollar).
-		Where(sq.Eq{table.ColumnId: note.Id}).
+		Where(sq.Eq{table.ColumnId: id}).
 		ToSql()
 	if err != nil {
 		return err
@@ -183,7 +146,7 @@ func (r *NoteRepository) Delete(ctx context.Context, note *model.Note) error {
 		QueryRaw: query,
 	}
 
-	if _, err = r.client.DB().Exec(ctx, q, args...); err != nil {
+	if _, err = r.client.DB().Exec(ctx, q, args); err != nil {
 		return err
 	}
 
