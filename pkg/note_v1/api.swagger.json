@@ -165,10 +165,6 @@
     "note_v1CreateRequest": {
       "type": "object",
       "properties": {
-        "id": {
-          "type": "string",
-          "format": "int64"
-        },
         "note": {
           "$ref": "#/definitions/note_v1NoteInfo"
         }

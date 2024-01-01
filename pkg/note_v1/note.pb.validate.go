@@ -654,17 +654,6 @@ func (m *CreateRequest) validate(all bool) error {
 
 	var errors []error
 
-	if m.GetId() <= 0 {
-		err := CreateRequestValidationError{
-			field:  "Id",
-			reason: "value must be greater than 0",
-		}
-		if !all {
-			return err
-		}
-		errors = append(errors, err)
-	}
-
 	if all {
 		switch v := interface{}(m.GetNote()).(type) {
 		case interface{ ValidateAll() error }:
