@@ -3,38 +3,33 @@ package db
 import (
 	"context"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/pgx/v4/pgxpool"
 )
 
-type Client interface {
-	Close() error
-	DB() *DB
-}
-
-type client struct {
+type Client struct {
 	db        *DB
 	closeFunc context.CancelFunc
 }
 
-func NewClient(ctx context.Context, config *pgxpool.Config) (Client, error) {
-	dbc, err := pgxpool.NewWithConfig(ctx, config)
+func NewClient(ctx context.Context, config *pgxpool.Config) (*Client, error) {
+	dbc, err := pgxpool.ConnectConfig(ctx, config)
 	if err != nil {
 		return nil, err
 	}
 
 	_, cancel := context.WithCancel(ctx)
 
-	return &client{
+	return &Client{
 		db:        &DB{pool: dbc},
 		closeFunc: cancel,
 	}, nil
 }
 
-func (c *client) DB() *DB {
+func (c *Client) DB() *DB {
 	return c.db
 }
 
-func (c *client) Close() error {
+func (c *Client) Close() error {
 	if c != nil {
 		if c.closeFunc != nil {
 			c.closeFunc()

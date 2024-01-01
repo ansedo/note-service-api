@@ -4,15 +4,17 @@ import (
 	"context"
 	"log"
 
+	"github.com/ansedo/note-service-api/internal/config"
 	"github.com/ansedo/note-service-api/internal/pkg/db"
 	"github.com/ansedo/note-service-api/internal/repository"
 	"github.com/ansedo/note-service-api/internal/service/note"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type serviceProvider struct {
-	db         db.Client
 	configPath string
+	config     *config.Config
+
+	db *db.Client
 
 	// repositories
 	noteRepository *repository.NoteRepository
@@ -22,12 +24,14 @@ type serviceProvider struct {
 }
 
 func newServiceProvider(pathConfig string) *serviceProvider {
-	return &serviceProvider{}
+	return &serviceProvider{
+		configPath: pathConfig,
+	}
 }
 
-func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
-	if s.db != nil {
-		cfg, err := s.GetDBConfig()
+func (s *serviceProvider) GetDB(ctx context.Context) *db.Client {
+	if s.db == nil {
+		cfg, err := s.GetConfig().GetDBConfig()
 		if err != nil {
 			log.Fatalf("failed to get db confg: %s", err.Error())
 		}
@@ -43,8 +47,17 @@ func (s *serviceProvider) GetDB(ctx context.Context) db.Client {
 	return s.db
 }
 
-func (s *serviceProvider) GetDBConfig() (*pgxpool.Config, error) {
-	panic("implement `GetDBConfig()` method in `serviceProvider` struct")
+func (s *serviceProvider) GetConfig() *config.Config {
+	if s.config == nil {
+		cfg, err := config.New(s.configPath)
+		if err != nil {
+			log.Fatalf("failed to get config: %s", err.Error())
+		}
+
+		s.config = cfg
+	}
+
+	return s.config
 }
 
 func (s *serviceProvider) GetNoteRepository(ctx context.Context) *repository.NoteRepository {

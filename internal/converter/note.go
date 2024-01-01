@@ -21,16 +21,16 @@ func ToNoteInfo(noteInfo *desc.NoteInfo) *model.NoteInfo {
 func ToUpdateNoteInfo(updateNoteInfo *desc.UpdateNoteInfo) *model.UpdateNoteInfo {
 	res := &model.UpdateNoteInfo{}
 	if updateNoteInfo.Title != nil {
-		res.Title = sql.NullString{String: updateNoteInfo.GetTitle().String(), Valid: true}
+		res.Title = sql.NullString{String: updateNoteInfo.GetTitle().Value, Valid: true}
 	}
 	if updateNoteInfo.Text != nil {
-		res.Text = sql.NullString{String: updateNoteInfo.GetText().String(), Valid: true}
+		res.Text = sql.NullString{String: updateNoteInfo.GetText().Value, Valid: true}
 	}
 	if updateNoteInfo.Author != nil {
-		res.Author = sql.NullString{String: updateNoteInfo.GetAuthor().String(), Valid: true}
+		res.Author = sql.NullString{String: updateNoteInfo.GetAuthor().Value, Valid: true}
 	}
 	if updateNoteInfo.Email != nil {
-		res.Email = sql.NullString{String: updateNoteInfo.GetEmail().String(), Valid: true}
+		res.Email = sql.NullString{String: updateNoteInfo.GetEmail().Value, Valid: true}
 	}
 
 	return res

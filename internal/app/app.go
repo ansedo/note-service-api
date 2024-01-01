@@ -2,35 +2,18 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net"
 	"net/http"
 	"sync"
 
-	"github.com/ansedo/note-service-api/internal/app/api/note_v1"
-	desc "github.com/ansedo/note-service-api/pkg/note_v1"
 	grpcValidator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
-)
 
-const (
-	hostGrpc = "localhost:50051"
-	hostHttp = "localhost:8090"
-
-	host       = "localhost"
-	port       = "54321"
-	dbUser     = "note-service-user"
-	dbPassword = "note-service-password"
-	dbName     = "note-service"
-	sslMode    = "disable"
-)
-
-var dbDsn = fmt.Sprintf(
-	"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-	host, port, dbUser, dbPassword, dbName, sslMode,
+	"github.com/ansedo/note-service-api/internal/app/api/note_v1"
+	desc "github.com/ansedo/note-service-api/pkg/note_v1"
 )
 
 type App struct {
@@ -119,7 +102,12 @@ func (a *App) initPublicHTTPHandlers(ctx context.Context) error {
 
 	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
 
-	if err := desc.RegisterNoteServiceHandlerFromEndpoint(ctx, a.mux, hostGrpc, opts); err != nil {
+	if err := desc.RegisterNoteServiceHandlerFromEndpoint(
+		ctx,
+		a.mux,
+		a.serviceProvider.GetConfig().GRPC.GetAddress(),
+		opts,
+	); err != nil {
 		return err
 	}
 
@@ -127,7 +115,7 @@ func (a *App) initPublicHTTPHandlers(ctx context.Context) error {
 }
 
 func (a *App) runGRPC(wg *sync.WaitGroup) error {
-	lis, err := net.Listen("tcp", hostGrpc)
+	lis, err := net.Listen("tcp", a.serviceProvider.GetConfig().GRPC.GetAddress())
 	if err != nil {
 		return err
 	}
@@ -140,7 +128,7 @@ func (a *App) runGRPC(wg *sync.WaitGroup) error {
 		}
 	}()
 
-	log.Printf("grpc server has been started on `%s`", hostGrpc)
+	log.Printf("grpc server has been started on `%s`", a.serviceProvider.GetConfig().GRPC.GetAddress())
 	return nil
 }
 
@@ -148,11 +136,11 @@ func (a *App) runPublicHTTP(wg *sync.WaitGroup) error {
 	go func() {
 		defer wg.Done()
 
-		if err := http.ListenAndServe(hostHttp, a.mux); err != nil {
+		if err := http.ListenAndServe(a.serviceProvider.GetConfig().HTTP.GetAddress(), a.mux); err != nil {
 			log.Fatalf("failed to run http server: %s", err.Error())
 		}
 	}()
 
-	log.Printf("http server has been started on `%s`", hostHttp)
+	log.Printf("http server has been started on `%s`", a.serviceProvider.GetConfig().HTTP.GetAddress())
 	return nil
 }

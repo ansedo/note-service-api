@@ -10,10 +10,10 @@ import (
 )
 
 type NoteRepository struct {
-	client db.Client
+	client *db.Client
 }
 
-func NewNoteRepository(client db.Client) *NoteRepository {
+func NewNoteRepository(client *db.Client) *NoteRepository {
 	return &NoteRepository{
 		client: client,
 	}
@@ -35,7 +35,7 @@ func (r *NoteRepository) Create(ctx context.Context, noteInfo *model.NoteInfo) (
 		QueryRaw: query,
 	}
 
-	row, err := r.client.DB().Query(ctx, q, args)
+	row, err := r.client.DB().Query(ctx, q, args...)
 	if err != nil {
 		return 0, err
 	}
@@ -67,7 +67,7 @@ func (r *NoteRepository) Get(ctx context.Context, id int64) (*model.Note, error)
 	}
 
 	var note model.Note
-	if err = r.client.DB().Get(ctx, &note, q, args); err != nil {
+	if err = r.client.DB().Get(ctx, &note, q, args...); err != nil {
 		return nil, err
 	}
 
@@ -89,7 +89,7 @@ func (r *NoteRepository) GetList(ctx context.Context) ([]*model.Note, error) {
 	}
 
 	var notes []*model.Note
-	if err = r.client.DB().Select(ctx, notes, q, args); err != nil {
+	if err = r.client.DB().Select(ctx, &notes, q, args...); err != nil {
 		return nil, err
 	}
 
@@ -125,7 +125,7 @@ func (r *NoteRepository) Update(ctx context.Context, id int64, updateNoteInfo *m
 		QueryRaw: query,
 	}
 
-	if _, err = r.client.DB().Exec(ctx, q, args); err != nil {
+	if _, err = r.client.DB().Exec(ctx, q, args...); err != nil {
 		return err
 	}
 
@@ -146,7 +146,7 @@ func (r *NoteRepository) Delete(ctx context.Context, id int64) error {
 		QueryRaw: query,
 	}
 
-	if _, err = r.client.DB().Exec(ctx, q, args); err != nil {
+	if _, err = r.client.DB().Exec(ctx, q, args...); err != nil {
 		return err
 	}
 
