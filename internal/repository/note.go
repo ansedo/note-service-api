@@ -2,11 +2,17 @@ package repository
 
 import (
 	"context"
+	"errors"
 
 	sq "github.com/Masterminds/squirrel"
 	"github.com/ansedo/note-service-api/internal/model"
 	"github.com/ansedo/note-service-api/internal/pkg/db"
 	"github.com/ansedo/note-service-api/internal/repository/table"
+	"github.com/jackc/pgx/v4"
+)
+
+var (
+	ErrNoNote = errors.New("note with this id does not exist")
 )
 
 type NoteRepository struct {
@@ -68,6 +74,9 @@ func (r *NoteRepository) Get(ctx context.Context, id int64) (*model.Note, error)
 
 	var note model.Note
 	if err = r.client.DB().Get(ctx, &note, q, args...); err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNoNote
+		}
 		return nil, err
 	}
 
