@@ -58,7 +58,14 @@ func (r *NoteRepository) Create(ctx context.Context, noteInfo *model.NoteInfo) (
 }
 
 func (r *NoteRepository) Get(ctx context.Context, id int64) (*model.Note, error) {
-	query, args, err := sq.Select(table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
+	query, args, err := sq.Select(
+		table.ColumnTitle,
+		table.ColumnText,
+		table.ColumnAuthor,
+		table.ColumnEmail,
+		table.ColumnCreatedAt,
+		table.ColumnUpdatedAt,
+	).
 		PlaceholderFormat(sq.Dollar).
 		From(table.Note).
 		Where(sq.Eq{table.ColumnId: id}).
@@ -84,7 +91,15 @@ func (r *NoteRepository) Get(ctx context.Context, id int64) (*model.Note, error)
 }
 
 func (r *NoteRepository) GetList(ctx context.Context) ([]*model.Note, error) {
-	query, args, err := sq.Select(table.ColumnId, table.ColumnTitle, table.ColumnText, table.ColumnAuthor, table.ColumnEmail).
+	query, args, err := sq.Select(
+		table.ColumnId,
+		table.ColumnTitle,
+		table.ColumnText,
+		table.ColumnAuthor,
+		table.ColumnEmail,
+		table.ColumnCreatedAt,
+		table.ColumnUpdatedAt,
+	).
 		PlaceholderFormat(sq.Dollar).
 		From(table.Note).
 		ToSql()
