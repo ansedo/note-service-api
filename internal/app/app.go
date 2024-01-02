@@ -46,13 +46,21 @@ func (a *App) Run() error {
 	wg := &sync.WaitGroup{}
 	wg.Add(2)
 
-	if err := a.runGRPC(wg); err != nil {
-		return err
-	}
+	go func() {
+		defer wg.Done()
 
-	if err := a.runPublicHTTP(wg); err != nil {
-		return err
-	}
+		if err := a.runGRPC(); err != nil {
+			log.Fatalf("failed to run grpc server: %s", err.Error())
+		}
+	}()
+
+	go func() {
+		defer wg.Done()
+
+		if err := a.runPublicHTTP(); err != nil {
+			log.Fatalf("failed to run http server: %s", err.Error())
+		}
+	}()
 
 	wg.Wait()
 	return nil
@@ -114,33 +122,27 @@ func (a *App) initPublicHTTPHandlers(ctx context.Context) error {
 	return nil
 }
 
-func (a *App) runGRPC(wg *sync.WaitGroup) error {
+func (a *App) runGRPC() error {
 	lis, err := net.Listen("tcp", a.serviceProvider.GetConfig().GRPC.GetAddress())
 	if err != nil {
 		return err
 	}
 
-	go func() {
-		defer wg.Done()
-
-		if err = a.grpcServer.Serve(lis); err != nil {
-			log.Fatalf("failed to run grpc server: %s", err.Error())
-		}
-	}()
-
 	log.Printf("grpc server has been started on `%s`", a.serviceProvider.GetConfig().GRPC.GetAddress())
+
+	if err = a.grpcServer.Serve(lis); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (a *App) runPublicHTTP(wg *sync.WaitGroup) error {
-	go func() {
-		defer wg.Done()
-
-		if err := http.ListenAndServe(a.serviceProvider.GetConfig().HTTP.GetAddress(), a.mux); err != nil {
-			log.Fatalf("failed to run http server: %s", err.Error())
-		}
-	}()
-
+func (a *App) runPublicHTTP() error {
 	log.Printf("http server has been started on `%s`", a.serviceProvider.GetConfig().HTTP.GetAddress())
+
+	if err := http.ListenAndServe(a.serviceProvider.GetConfig().HTTP.GetAddress(), a.mux); err != nil {
+		return err
+	}
+
 	return nil
 }
