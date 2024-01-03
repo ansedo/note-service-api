@@ -2,105 +2,29 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"flag"
 	"log"
-	"net"
-	"net/http"
-	"sync"
 
-	grpcValidator "github.com/grpc-ecosystem/go-grpc-middleware/validator"
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-	_ "github.com/jackc/pgx/stdlib"
-	"github.com/jmoiron/sqlx"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
-
-	"github.com/ansedo/note-service-api/internal/app/api/note_v1"
-	"github.com/ansedo/note-service-api/internal/repository"
-	"github.com/ansedo/note-service-api/internal/service/note"
-	desc "github.com/ansedo/note-service-api/pkg/note_v1"
+	"github.com/ansedo/note-service-api/internal/app"
 )
 
-const (
-	hostGrpc = "localhost:50051"
-	hostHttp = "localhost:8090"
+var pathConfig string
 
-	host       = "localhost"
-	port       = "54321"
-	dbUser     = "note-service-user"
-	dbPassword = "note-service-password"
-	dbName     = "note-service"
-	sslMode    = "disable"
-)
-
-var dbDsn = fmt.Sprintf(
-	"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-	host, port, dbUser, dbPassword, dbName, sslMode,
-)
+func init() {
+	flag.StringVar(&pathConfig, "config", "config/config.json", "path to configuration file")
+}
 
 func main() {
-	wg := sync.WaitGroup{}
-	wg.Add(2)
+	flag.Parse()
 
-	go func() {
-		defer wg.Done()
-		if err := startGRPC(); err != nil {
-			log.Fatalf("failed to start grpc server: %s", err.Error())
-		}
-	}()
+	ctx := context.Background()
 
-	go func() {
-		defer wg.Done()
-		if err := startHttp(); err != nil {
-			log.Fatalf("failed to start http server: %s", err.Error())
-		}
-	}()
-
-	wg.Wait()
-}
-
-func startGRPC() error {
-	lis, err := net.Listen("tcp", hostGrpc)
+	a, err := app.NewApp(ctx, pathConfig)
 	if err != nil {
-		return err
+		log.Fatalf("failed to create app: %s", err.Error())
 	}
 
-	db, err := sqlx.Open("pgx", dbDsn)
-	if err != nil {
-		return err
+	if err = a.Run(); err != nil {
+		log.Fatalf("failed to run app: %s", err.Error())
 	}
-	defer db.Close()
-
-	noteService := note.NewService(
-		repository.NewNoteRepository(db),
-	)
-
-	srv := grpc.NewServer(
-		grpc.UnaryInterceptor(grpcValidator.UnaryServerInterceptor()),
-	)
-	desc.RegisterNoteServiceServer(srv, note_v1.NewNote(noteService))
-
-	log.Printf("grpc server has been started on `%s`", hostGrpc)
-
-	if err = srv.Serve(lis); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func startHttp() error {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-
-	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{grpc.WithTransportCredentials(insecure.NewCredentials())}
-	err := desc.RegisterNoteServiceHandlerFromEndpoint(ctx, mux, hostGrpc, opts)
-	if err != nil {
-		return err
-	}
-
-	log.Printf("http server has been started on `%s`", hostHttp)
-
-	return http.ListenAndServe(hostHttp, mux)
 }

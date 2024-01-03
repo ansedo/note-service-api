@@ -11,11 +11,11 @@ type Service struct {
 }
 
 type noteRepository interface {
-	Create(ctx context.Context, note *model.Note) (*model.Note, error)
-	Get(ctx context.Context, req *model.Note) (*model.Note, error)
+	Create(ctx context.Context, noteInfo *model.NoteInfo) (int64, error)
+	Get(ctx context.Context, id int64) (*model.Note, error)
 	GetList(ctx context.Context) ([]*model.Note, error)
-	Update(ctx context.Context, note *model.Note) error
-	Delete(ctx context.Context, note *model.Note) error
+	Update(ctx context.Context, id int64, updateNoteInfo *model.UpdateNoteInfo) error
+	Delete(ctx context.Context, id int64) error
 }
 
 func NewService(noteRepository noteRepository) *Service {

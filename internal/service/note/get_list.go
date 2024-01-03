@@ -7,5 +7,10 @@ import (
 )
 
 func (s *Service) GetList(ctx context.Context) ([]*model.Note, error) {
-	return s.noteRepository.GetList(ctx)
+	notes, err := s.noteRepository.GetList(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return notes, nil
 }

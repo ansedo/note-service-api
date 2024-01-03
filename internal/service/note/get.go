@@ -6,6 +6,11 @@ import (
 	"github.com/ansedo/note-service-api/internal/model"
 )
 
-func (s *Service) Get(ctx context.Context, note *model.Note) (*model.Note, error) {
-	return s.noteRepository.Get(ctx, note)
+func (s *Service) Get(ctx context.Context, id int64) (*model.Note, error) {
+	note, err := s.noteRepository.Get(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return note, nil
 }

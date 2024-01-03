@@ -21,6 +21,7 @@ LICENSE
 !docker-compose.yaml
 !*.proto
 
+!config/*
 !migrations/*
 
 !api.swagger.json
