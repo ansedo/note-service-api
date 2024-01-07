@@ -3,6 +3,7 @@ package note_v1
 import (
 	"context"
 	"errors"
+	"math/rand"
 	"reflect"
 	"testing"
 
@@ -10,6 +11,7 @@ import (
 	noteMocks "github.com/ansedo/note-service-api/internal/repository/mocks"
 	"github.com/ansedo/note-service-api/internal/service/note"
 	desc "github.com/ansedo/note-service-api/pkg/note_v1"
+
 	"github.com/go-faker/faker/v4"
 	"go.uber.org/mock/gomock"
 )
@@ -21,11 +23,14 @@ func TestNote_Create(t *testing.T) {
 		noteMock = noteMocks.NewMockNoteRepositoryInterface(gomock.NewController(t))
 		api      = NewMockNote(Note{noteService: note.NewMockNoteService(noteMock)})
 
+		validID      = rand.Int63() + 1
+		invalidID    = int64(0)
 		validTitle   = faker.Sentence()
 		validText    = faker.Paragraph()
 		validAuthor  = faker.Name()
 		validEmail   = faker.Email()
 		invalidEmail = faker.Word()
+		repoErr      = errors.New(faker.Word())
 	)
 	type args struct {
 		ctx context.Context
@@ -59,9 +64,9 @@ func TestNote_Create(t *testing.T) {
 				Author: validAuthor,
 				Email:  validEmail,
 			},
-			repoRes: int64(1),
+			repoRes: validID,
 			repoErr: nil,
-			want:    &desc.CreateResponse{Id: int64(1)},
+			want:    &desc.CreateResponse{Id: validID},
 			wantErr: false,
 		},
 		{
@@ -83,13 +88,12 @@ func TestNote_Create(t *testing.T) {
 				Author: validAuthor,
 				Email:  invalidEmail,
 			},
-			repoRes: int64(0),
-			repoErr: errors.New(faker.Word()),
+			repoRes: invalidID,
+			repoErr: repoErr,
 			want:    nil,
 			wantErr: true,
 		},
 	}
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			noteMock.EXPECT().Create(tt.args.ctx, tt.repoReq).Return(tt.repoRes, tt.repoErr)
