@@ -1,5 +1,7 @@
 package repository
 
+//go:generate mockgen --build_flags=--mod=mod -destination=mocks/note_repository.go -package=mocks . NoteRepositoryInterface
+
 import (
 	"context"
 	"errors"
@@ -14,6 +16,14 @@ import (
 var (
 	ErrNoNote = errors.New("note with this id does not exist")
 )
+
+type NoteRepositoryInterface interface {
+	Create(ctx context.Context, noteInfo *model.NoteInfo) (int64, error)
+	Get(ctx context.Context, id int64) (*model.Note, error)
+	GetList(ctx context.Context) ([]*model.Note, error)
+	Update(ctx context.Context, id int64, updateNoteInfo *model.UpdateNoteInfo) error
+	Delete(ctx context.Context, id int64) error
+}
 
 type NoteRepository struct {
 	client *db.Client
