@@ -54,3 +54,7 @@ local-migration-up:
 .PHONY: local-migration-down
 local-migration-down:
 	goose -dir ${LOCAL_MIGRATION_DIR} postgres ${LOCAL_MIGRATION_DSN} down -v
+
+.PHONY: test-coverage
+test-coverage:
+	go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
